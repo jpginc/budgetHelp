@@ -68,23 +68,44 @@ class BudgetClass
 	getTransactions()
 	{
 		table := this.iexplorer.document.getElementById("transactionsTableBody")
-		rows := table.getElementsByTagName("tr")
-		
+		;~ rows := table.getElementsByTagName("tr")
 		things := []
 		
-		loop, % rows.length
+		loop, % table.rows.length
 		{
-			date = rows[A_Index - 1].getElementsByClassName("date")
-			transactionDetails = rows[A_Index - 1].getElementsByClassName("transaction_details")
-			amount = rows[A_Index - 1].getElementsByClassName("currencyUIDebit")
-			MsgBox % date.length "`n" amount.length "`n" transactionDetails.length "`n;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;`n" rows[A_Index -1].innerText
-			if(! date.length || ! amount.length || ! transactionDetails.length) 
+			transDate := false
+			amount := false
+			transDetail := false
+			cells := table.rows.item(A_Index - 1).cells
+			loop % cells.length
 			{
-				continue
+				cellClass := cells[A_Index - 1].className
+				value := cells[A_Index -1].innerText
+				value2 := cells[A_Index -1].nodeValue
+				;~ MsgBox % cellClass "`n'''''''''" value "`n;;;;;;;;;;;" value2
+				IfInString, cellClass, date
+				{
+					transDate := value 
+				}
+				IfInString, cellClass, debit
+				{
+					amount := value
+				}IfInString, cellClass, arrow
+				{
+					transDetail := value
+				}
+				
 			}
-			things.insert([date[0].innerText, transactionDetails[0].innerText, amount[0].innerText])
+			
+			if(transDate && amount && transDetail) 
+			{
+				;~ MsgBox Adding something
+				things.Insert([transDate, amount, transDetail])
+			} 
+				;~ MsgBox % transDate "`n;;;;;;;;;" amount "`n';;;;;;;;;;;;;;;;;" transDetail
 		}
-		MsgBox % arrayToStringLiteral(things)
+		MsgBox % arrayToString(things)
+		Clipboard := arrayToString(things)
 		return this
 	}
 	
@@ -104,8 +125,7 @@ class BudgetClass
 	}
 	
 }
-
-arrayToStringLiteral(theArray)
+arrayToString(theArray)
 {	string := "{"
 	for key, value in theArray
 	{	if(A_index != 1)
@@ -114,7 +134,7 @@ arrayToStringLiteral(theArray)
         if key is number
         {   string .= key ":"
         } else if(IsObject(key))
-        {   string .= arrayToStringLiteral(key) ":"
+        {   string .= arrayToString(key) ":"
         } else
         {   key := escapeSpecialChars(key)
             string .=  """" key """:" 
@@ -122,7 +142,7 @@ arrayToStringLiteral(theArray)
         if value is number
         {   string .= value
         } else if (IsObject(value))
-		{	string .= arrayToStringLiteral(value)
+		{	string .= arrayToString(value)
 		} else
 		{	value := escapeSpecialChars(value)
 			string .=  """" value """"
@@ -142,8 +162,14 @@ escapeSpecialChars(theString, reverse := false)
 	}
 	return theString
 }
-stringLiteralToArray(theString)
-{	if(RegExMatch(theString, "\R") || instr(theString, "{") != 1 || instr(theString, "}", true, 0) != strlen(theString))
+
+stringToArray(theString)
+{	
+	if(theString == "{}")
+	{
+		return {}
+	}
+        if(RegExMatch(theString, "\R") || instr(theString, "{") != 1 || instr(theString, "}", true, 0) != strlen(theString))
 	{ 	return false
 	}
     returnArray := object()
@@ -206,7 +232,13 @@ getNextValue(ByRef string, start)
         return [escapeSpecialChars(substr(string, start, end - start), reverse := true), end + 1]
     }
     if(RegExMatch(string, "\s*\{", "", start) == start)
-    {   ;it is another object!
+    {   
+        ;it is another object!
+        if(RegExMatch(string, "}", "", start) == start +1)
+        {
+            ;the other object is an emtpy object
+            return [{}, start + 2]
+        }
         start := instr(string, "{", true, start)
         end := start + 1
         ;if we find an { then we need to find an additional }
@@ -232,10 +264,11 @@ getNextValue(ByRef string, start)
             return false
         }
         ;MsgBox % substr(string, start, end - start + 1)
-        value := stringLiteralToArray(substr(string, start, end - start + 1))
+        value := stringToArray(substr(string, start, end - start + 1))
         if(value)
         {   return [value , end + 1 ]
         }
     }
+    MsgBox didn't start with a good value
     return false
 }
