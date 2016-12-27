@@ -6,7 +6,7 @@ class TransactionClass
 	__new(amount, desc, transDate)
 	{
 		this.amount := amount
-		this.desc := trim(desc)
+		this.desc := desc
 		this.transDate := transDate
 		return this
 	}

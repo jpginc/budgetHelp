@@ -37,7 +37,7 @@
 			{	
 				break
 			}
-			this.debug(url)
+			debug(url)
 			sleep 500
 		}
 		return this
@@ -45,9 +45,10 @@
 	
 	waitForLogin()
 	{
-		this.notify("Please login")
+		notify("Please login")
 		this.waitFor("Netbank - Home")
-		return this.notify("")
+		notify("")
+		return this
 	}
 	
 	waitForTransactions()
@@ -106,21 +107,5 @@
 	trimDetails(details)
 	{
 		return regexReplace(details, "^\s*Open transaction details\s*")
-	}
-	
-	notify(toNotify)
-	{
-		ToolTip, % toNotify
-		return this
-	}
-	
-	debug(toDebug)
-	{
-		if(this.debugOn)
-		{
-			this.notify(toDebug)
-		}
-		return this
-	}
-	
+	}	
 }

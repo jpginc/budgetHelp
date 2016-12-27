@@ -1,4 +1,19 @@
-﻿arrayToString(theArray)
+﻿notify(toNotify)
+{
+	ToolTip, % toNotify
+	return 
+}
+
+debug(toDebug)
+{
+	if(debugOn)
+	{
+		notify(toDebug)
+	}
+	return
+}
+	
+arrayToString(theArray)
 {	string := "{"
 	for key, value in theArray
 	{	if(A_index != 1)
