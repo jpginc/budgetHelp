@@ -5,15 +5,12 @@
 	
 	__new()
 	{
+		this.init()
 		return this
 	}
 	
 	getTransactions()
 	{
-		if(! this.iexplorer)
-		{
-			this.init()
-		}
 		this.waitForTransactions()
 			.waitForFullLoad()
 		
@@ -40,14 +37,6 @@
 			debug(url)
 			sleep 500
 		}
-		return this
-	}
-	
-	waitForLogin()
-	{
-		notify("Please login")
-		this.waitFor("Netbank - Home")
-		notify("")
 		return this
 	}
 	
@@ -81,14 +70,17 @@
 			loop % cells.length
 			{
 				cellClass := cells[A_Index - 1].className
-				value := cells[A_Index -1].innerText
+				value := trim(cells[A_Index -1].innerText)
 				IfInString, cellClass, date
 				{
 					transDate := value 
 				}
 				IfInString, cellClass, debit
 				{
-					amount := value
+					IfInString, value, -$
+					{
+						amount := value
+					}
 				}IfInString, cellClass, arrow
 				{
 					transDetail := value
@@ -96,7 +88,7 @@
 				
 			}
 			
-			if(transDate && amount && transDetail) 
+			if(transDate && amount && transDetail && (! InStr(transDetail, "PENDING -")))
 			{
 				transactions.Insert(new TransactionClass(amount, this.trimDetails(transDetail), transDate))
 			} 
@@ -106,6 +98,7 @@
 	
 	trimDetails(details)
 	{
-		return regexReplace(details, "^\s*Open transaction details\s*")
+		;some descriptions don't have an option transaction details thing for some reason
+		return regexReplace(regexReplace(details, "^\s*Open transaction details\s*"), "^\s*")
 	}	
 }

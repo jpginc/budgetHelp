@@ -1,23 +1,24 @@
 ﻿test := new GoodBudgetAPIClass()
-test.getTransactions()
+;~ test.getTransactions()
+test.addNewTransaction(new TransactionClass(99, "a meaningful description", "12 dec 2016"))
+test.addNewTransaction(new TransactionClass(99, "a meaningful description", "1 dec 2016"))
 ExitApp
 
 Class GoodBudgetAPIClass
 {
 	iexplorer := false
 	exportFileNameWithPath :=  A_Temp "\budgettmp.txt"
+	defaultEnvelope := "To Assign"
 	
 	__new()
 	{
+		this.init()
+			.waitForFullLoad()
 		return this
 	}
 	
 	getTransactions()
 	{
-		if(! this.iexplorer)
-		{
-			this.init()
-		}
 		this.waitForHome()
 			.waitForFullLoad()
 		return this.csvToTransactions(this.getTransactionsAsCSV())
@@ -50,7 +51,7 @@ Class GoodBudgetAPIClass
 	{
 		notify("Exporting existing budget, please wait...")
 		this.iexplorer.document.getElementById("export-txns").click()
-		WinActivate, Home | Goodbudget - Internet Explorer
+		this.activateWindow()
 		sleep 500
 		send {f6}{tab}
 		sleep 500
@@ -63,8 +64,16 @@ Class GoodBudgetAPIClass
 		sleep 500
 		FileRead, budget, % this.exportFileNameWithPath
 		FileDelete, % this.exportFileNameWithPath
+		notify("")
 		return budget
 	}
+	
+	activateWindow()
+	{
+		WinActivate, Home | Goodbudget - Internet Explorer
+		return this
+	}
+	
 	waitForHome()
 	{
 		notify("Please login")
@@ -87,8 +96,32 @@ Class GoodBudgetAPIClass
 		return regexReplace(details, "^\s*Open transaction details\s*")
 	}
 	
-	addNewTransactions(transaction)
+	setValue(id, value)
 	{
+		this.activateWindow()
+		this.iexplorer.document.getElementById(id).value := ""
+		sleep 50
+		this.iexplorer.document.getElementById(id).focus()
+		sleep 50
+		Clipboard := value
+		Send ^v
+		sleep 50
+		return this
+	}
+	
+	addNewTransaction(transaction)
+	{
+		sleep 3000 ;its fucking rate limited?
+		this.iexplorer.document.getElementsByClassName("btn addTransaction")[0].click()
+		sleep 500
+		this.setValue("expense-date", transaction.transDate)		
+			.setValue("expense-receiver", transaction.desc)		
+			.setValue("expense-amount", transaction.amount)		
+		send {tab}
+		sleep 50
+		send % this.defaultEnvelope
+
+		this.iexplorer.document.getElementById("addTransactionSave").click()
 		return this
 	}
 	
@@ -97,7 +130,7 @@ Class GoodBudgetAPIClass
 		transactions := []
 		headingsToIndex := this.__getHeadingToIndex(csv)
 		transDateColumn := headingsToIndex["Date"]
-		transDescColumn := headingsToIndex["Notes"]
+		transDescColumn := headingsToIndex["Name"]
 		transAmountColumn := headingsToIndex["Amount"]
 		
 		StringReplace, csv, csv, `r`n, `n, All
@@ -107,7 +140,7 @@ Class GoodBudgetAPIClass
 			{
 				continue ;skip the headers
 			}
-			values := StrSplit(A_loopfield, ",")
+			values := this.csvSplit(A_loopfield)
 			if(values[transDateColumn] && values[transDescColumn] && values[transAmountColumn])
 			{
 				transactions.Insert(new TransactionClass(values[transAmountColumn], values[transDescColumn], values[transDateColumn]))
@@ -117,21 +150,30 @@ Class GoodBudgetAPIClass
 		return transactions
 	}
 	
+	csvSplit(line)
+	{
+		split := []
+		loop, parse, line, csv
+		{
+			split.insert(A_LoopField)
+		}
+		return split
+	}
+	
 	__getHeadingToIndex(csv)
 	{
+		headingsToIndex := []
 		Loop, parse, csv, `n
 		{
-			headers := StrSplit(A_loopfield, ",")
-			headingsToIndex := {}
-			loop, % headers.maxIndex()
+			headers := this.csvSplit(A_loopfield)
+			for index, value in headers
 			{
-				headingsToIndex[headers[A_Index]] := A_Index
+				headingsToIndex[value] := index
 			}
 			return headingsToIndex
 		}
 		return ""
 	}
 }
-#x::ExitApp
 #Include commonFunctions.ahk
 #Include transaction.ahk

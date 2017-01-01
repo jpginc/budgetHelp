@@ -160,3 +160,6 @@ getNextValue(ByRef string, start)
     MsgBox didn't start with a good value
     return false
 }
+
+
+#x::ExitApp
