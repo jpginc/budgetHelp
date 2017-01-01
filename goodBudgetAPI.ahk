@@ -20,10 +20,7 @@ Class GoodBudgetAPIClass
 		}
 		this.waitForHome()
 			.waitForFullLoad()
-		existingBudget := this.exportTransactionsAsCSV()
-		Clipboard := existingBudget
-		MsgBox % existingBudget
-		return this.__getTransactions()	
+		return this.csvToTransactions(this.getTransactionsAsCSV())
 	}
 	
 	init()
@@ -49,7 +46,7 @@ Class GoodBudgetAPIClass
 		return this
 	}
 	
-	exportTransactionsAsCSV()
+	getTransactionsAsCSV()
 	{
 		notify("Exporting existing budget, please wait...")
 		this.iexplorer.document.getElementById("export-txns").click()
@@ -58,13 +55,13 @@ Class GoodBudgetAPIClass
 		send {f6}{tab}
 		sleep 500
 		send {down 2}{enter}
-		WinWaitActive, Save As
+		WinWait, Save As
+		WinActivate
 		Clipboard := this.exportFileNameWithPath
 		send ^v{enter}
 		send !y
 		sleep 500
 		FileRead, budget, % this.exportFileNameWithPath
-		notify("Existing budget downloaded")
 		FileDelete, % this.exportFileNameWithPath
 		return budget
 	}
@@ -85,59 +82,56 @@ Class GoodBudgetAPIClass
 		return this
 	}
 	
-	__getTransactions()
-	{
-		table := this.iexplorer.document.getElementById("transactionsTableBody")
-		transactions := []
-		
-		loop, % table.rows.length
-		{
-			transDate := false
-			amount := false
-			transDetail := false
-			cells := table.rows.item(A_Index - 1).cells
-			loop % cells.length
-			{
-				cellClass := cells[A_Index - 1].className
-				value := cells[A_Index -1].innerText
-				IfInString, cellClass, date
-				{
-					transDate := value 
-				}
-				IfInString, cellClass, debit
-				{
-					amount := value
-				}IfInString, cellClass, arrow
-				{
-					transDetail := value
-				}
-				
-			}
-			
-			if(transDate && amount && transDetail) 
-			{
-				transactions.Insert(new TransactionClass(amount, this.trimDetails(transDetail), transDate))
-			} 
-		}
-		return transactions
-	}
-	
 	trimDetails(details)
 	{
 		return regexReplace(details, "^\s*Open transaction details\s*")
 	}
 	
-	
-	getAllTransactions()
+	addNewTransactions(transaction)
 	{
 		return this
 	}
 	
-	addNewTransactions()
+	csvToTransactions(csv)
 	{
+		transactions := []
+		headingsToIndex := this.__getHeadingToIndex(csv)
+		transDateColumn := headingsToIndex["Date"]
+		transDescColumn := headingsToIndex["Notes"]
+		transAmountColumn := headingsToIndex["Amount"]
 		
+		StringReplace, csv, csv, `r`n, `n, All
+		Loop, parse, csv, `n
+		{
+			if(A_index == 1) 
+			{
+				continue ;skip the headers
+			}
+			values := StrSplit(A_loopfield, ",")
+			if(values[transDateColumn] && values[transDescColumn] && values[transAmountColumn])
+			{
+				transactions.Insert(new TransactionClass(values[transAmountColumn], values[transDescColumn], values[transDateColumn]))
+			}
+		}
+		debug(ArrayToString(transactions))
+		return transactions
 	}
-
+	
+	__getHeadingToIndex(csv)
+	{
+		Loop, parse, csv, `n
+		{
+			headers := StrSplit(A_loopfield, ",")
+			headingsToIndex := {}
+			loop, % headers.maxIndex()
+			{
+				headingsToIndex[headers[A_Index]] := A_Index
+			}
+			return headingsToIndex
+		}
+		return ""
+	}
 }
 #x::ExitApp
 #Include commonFunctions.ahk
+#Include transaction.ahk
