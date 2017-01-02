@@ -15,6 +15,10 @@
 	navigate(url)
 	{
 		this.comObj.navigate(url)
+		While(this.comObj.readyState != 4)
+		{
+			sleep 50
+		}
 		return this
 	}
 	
@@ -35,12 +39,9 @@
 	
 	waitForFullLoad()
 	{
-		While(this.comObj.readyState != 4 || this.comObj.document.readyState != "complete" || this.comObj.busy)
+		While(this.comObj.document.readyState != "complete" || this.comObj.busy)
 		{
-			if(this.comObj.readyState == 4)
-			{
-				notify(this.comObj.readyState "`n" this.comObj.document.readyState)
-			}
+			notify(this.comObj.readyState "`n" this.comObj.document.readyState)
 			Sleep, 50
 		}
 		return this		
