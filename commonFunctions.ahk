@@ -1,6 +1,6 @@
 ﻿notify(toNotify)
 {
-	ToolTip, % toNotify
+	GuiControl, , notifyText, % toNotify
 	return 
 }
 

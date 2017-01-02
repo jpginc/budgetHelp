@@ -1,11 +1,23 @@
 ﻿deubg := true
 c := new BudgetClass(new CommonweathBankAPIClass(), new GoodBudgetAPIClass())
-c.update()
+Gui, Add, Text, vnotifyText, Press the update button to start!`n`n
+Gui, add, button, vupdateButton gUpdate, Update
+Gui, add, button, gquit, Quit
+gui, show, w500 h500
 return
 
+quit:
+GuiClose:
+{
+	ExitApp
+}
+update:
 #u::
 {
+	GuiControl, disable, updateButton
 	c.update()
+	GuiControl, enable, updateButton
+	notify("Done! press update to go again")
 	return
 }
 
