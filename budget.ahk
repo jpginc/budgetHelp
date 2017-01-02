@@ -23,15 +23,29 @@ class BudgetClass
 	{
 		bankTransactions := this.bankApi.getTransactions()
 		budgetedTransactions := this.budgetAppApi.getTransactions()
-		this.addTransactions(this.removeAlreadyAdded(bankTransactions, budgetedTransactions))
+		this.addTransactions(this.2017OrLater(this.removeAlreadyAdded(bankTransactions, budgetedTransactions)))
+		MsgBox update complete
 		return this
+	}
+	
+	2017OrLater(transactions)
+	{
+		later := []
+		startOf2017 := "20170101000000"
+		for index, transaction in transactions
+		{
+			if(transaction.date > startOf2017)
+			{
+				later.insert(transaction)
+			}
+		}
+		return later
 	}
 	
 	addTransactions(transactions)
 	{
 		for index, transaction in transactions
 		{
-			MsgBox % arrayToString(transaction)
 			this.budgetAppApi.addNewTransaction(transaction)
 		}
 		return this

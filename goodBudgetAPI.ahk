@@ -91,12 +91,22 @@ Class GoodBudgetAPIClass
 		return this
 	}
 	
+	/*
+	 * attempts to format the date, if it fails then the original value is returned
+	 * hopefully the date is already formatted....
+	 */
+	formatDate(date)
+	{
+		formatTime, fixedDate, % date, MM/dd/yyyy
+		return fixedDate ? fixedDate : date
+	}
+	
 	addNewTransaction(transaction)
 	{
 		sleep 3000 ;its fucking rate limited?
 		this.iexplorer.getElementsByClassName("btn addTransaction")[0].click()
 		sleep 500
-		this.setValue("expense-date", transaction.transDate)		
+		this.setValue("expense-date", this.formatDate(transaction.transDate))
 			.setValue("expense-receiver", transaction.desc)		
 			.setValue("expense-amount", transaction.amount)		
 		send {tab}

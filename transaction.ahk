@@ -1,5 +1,9 @@
 class TransactionClass
 {	
+	/*
+	 * the date is expected to have day then month then year. It tried to format it into YYYYMMDDHH24MISS
+	 * amount should just be a number. it will remove ",", "-" and "$" from the string
+	 */
 	__new(amount, desc, transDate)
 	{
 		this.amount := this.fixAmount(amount)
@@ -8,11 +12,12 @@ class TransactionClass
 		return this
 	}
 	
+	/*
+	 * attempt to convert the date into YYYYMMDDHH24MISS format. Keept the original if it fails
+	 */ 
 	fixDate(transDate)
 	{
 		formattedDate := this.DateParse(transDate)
-		
-		formatTime, fixedDate, % formattedDate, MM/dd/yyyy
 		return fixedDate ? fixedDate : transDate
 	}
 	/*
