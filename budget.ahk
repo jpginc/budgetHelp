@@ -5,7 +5,6 @@ return
 
 #u::
 {
-	MsgBox here
 	c.update()
 	return
 }

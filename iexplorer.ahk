@@ -18,7 +18,7 @@
 		return this
 	}
 	
-	waitFor(location)
+	waitFor(name)
 	{
 		while true
 		{
@@ -27,7 +27,7 @@
 			{	
 				break
 			}
-			debug("Waiting for location: " location)
+			debug("Waiting for location: " name)
 			sleep 500
 		}
 		return this
@@ -37,7 +37,10 @@
 	{
 		While(this.comObj.readyState != 4 || this.comObj.document.readyState != "complete" || this.comObj.busy)
 		{
-			notify(this.comObj.readyState "`n" this.comObj.document.readyState)
+			if(this.comObj.readyState == 4)
+			{
+				notify(this.comObj.readyState "`n" this.comObj.document.readyState)
+			}
 			Sleep, 50
 		}
 		return this		
