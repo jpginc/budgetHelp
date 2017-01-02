@@ -66,3 +66,4 @@ class BudgetClass
 #include commonwealth bank.ahk
 #include transaction.ahk
 #include goodBudgetAPI.ahk
+#Include iexplorer.ahk
