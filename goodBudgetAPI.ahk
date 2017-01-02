@@ -26,31 +26,16 @@ Class GoodBudgetAPIClass
 	
 	init()
 	{
-		this.iexplorer := ComObjCreate("InternetExplorer.Application")
-		this.iexplorer.visible := true
-		this.iexplorer.navigate("https://goodbudget.com/home")
-		return this
-	}
-	
-	waitFor(name)
-	{
-		while true
-		{
-			url := this.iexplorer.LocationName
-			IfInString, url, % name
-			{	
-				break
-			}
-			this.debug(url)
-			sleep 500
-		}
+		this.iexplorer := new IExplorerClass()
+		this.iexplorer.visible(true)
+			.navigate("https://goodbudget.com/home")
 		return this
 	}
 	
 	getTransactionsAsCSV()
 	{
 		notify("Exporting existing budget, please wait...")
-		this.iexplorer.document.getElementById("export-txns").click()
+		this.iexplorer.getElementById("export-txns").click()
 		this.activateWindow()
 		sleep 500
 		send {f6}{tab}
@@ -76,18 +61,15 @@ Class GoodBudgetAPIClass
 	
 	waitForHome()
 	{
-		notify("Please login")
-		this.waitFor("Home | Goodbudget")
+		notify("Please login to GoodBudget")
+		this.iexplorer.waitFor("Home | Goodbudget")
 		notify("")
 		return this
 	}
 	
 	waitForFullLoad()
 	{
-		While(this.iexplorer.readyState != 4 || this.iexplorer.document.readyState != "complete" || this.iexplorer.busy)
-		{
-			Sleep, 50
-		}
+		this.iexplorer.waitForFullLoad()
 		return this
 	}
 	
@@ -99,9 +81,9 @@ Class GoodBudgetAPIClass
 	setValue(id, value)
 	{
 		this.activateWindow()
-		this.iexplorer.document.getElementById(id).value := ""
+		this.iexplorer.getElementById(id).value := ""
 		sleep 50
-		this.iexplorer.document.getElementById(id).focus()
+		this.iexplorer.getElementById(id).focus()
 		sleep 50
 		Clipboard := value
 		Send ^v
@@ -112,7 +94,7 @@ Class GoodBudgetAPIClass
 	addNewTransaction(transaction)
 	{
 		sleep 3000 ;its fucking rate limited?
-		this.iexplorer.document.getElementsByClassName("btn addTransaction")[0].click()
+		this.iexplorer.getElementsByClassName("btn addTransaction")[0].click()
 		sleep 500
 		this.setValue("expense-date", transaction.transDate)		
 			.setValue("expense-receiver", transaction.desc)		
@@ -121,7 +103,7 @@ Class GoodBudgetAPIClass
 		sleep 50
 		send % this.defaultEnvelope
 
-		this.iexplorer.document.getElementById("addTransactionSave").click()
+		this.iexplorer.getElementById("addTransactionSave").click()
 		return this
 	}
 	

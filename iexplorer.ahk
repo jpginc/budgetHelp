@@ -47,4 +47,8 @@
 	{
 		return this.comObj.document.getElementById(id)
 	}
+	getElementsByClassName(name)
+	{
+		return this.comObj.document.getElementsByClassName(name)
+	}
 }
