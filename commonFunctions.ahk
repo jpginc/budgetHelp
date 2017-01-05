@@ -6,6 +6,7 @@
 
 debug(toDebug)
 {
+    global debugOn
 	if(debugOn)
 	{
 		notify(toDebug)

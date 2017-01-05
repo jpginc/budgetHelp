@@ -1,14 +1,16 @@
 ﻿class IExplorerClass
 {
-	__new()
+	__new(iExplorer)
 	{
-		this.comObj :=  ComObjCreate("InternetExplorer.Application")
+		this.comObj :=  iExplorer
+		iExplorer.silent :=1
 		return this
 	}
 	
-	visible(val)
+	activateWindow()
 	{
-		this.comObj.visible := val
+		windowName := this.comObj.LocationName
+		WinActivate, % windowName
 		return this
 	}
 	
@@ -26,14 +28,15 @@
 	{
 		while true
 		{
-			url := this.comObj.LocationName
+			url := this.comObj.Document.title
 			IfInString, url, % name
 			{	
 				break
 			}
-			debug("Waiting for location: " name)
+			debug("Waiting for location: " name "`nSeeing: " url)
 			sleep 500
 		}
+		debug("")
 		return this
 	}
 	

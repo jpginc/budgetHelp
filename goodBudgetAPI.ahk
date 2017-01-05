@@ -1,75 +1,55 @@
-﻿test := new GoodBudgetAPIClass()
-;~ test.getTransactions()
-test.addNewTransaction(new TransactionClass(99, "a meaningful description", "12 dec 2016"))
-test.addNewTransaction(new TransactionClass(99, "a meaningful description", "1 dec 2016"))
+﻿Gui, Add, ActiveX, w1000 h700 vthis.iExplorerGuiTest, Shell.Explorer
+gui show
+temp := new this.iExplorerClass(this.iExplorerGuiTest)
+test := new GoodBudgetAPIClass()
+test.getTransactions(temp)
+test.addNewTransaction(new TransactionClass(99, "a meaningful description", "12 dec 2016"), temp)
+test.addNewTransaction(new TransactionClass(99, "a meaningful description", "1 dec 2016"), temp)
 ExitApp
 
 Class GoodBudgetAPIClass
 {
-	iexplorer := false
-	exportFileNameWithPath :=  A_Temp "\budgettmp.txt"
 	defaultEnvelope := "To Assign"
 	
-	__new()
+	__new(iExplorer)
 	{
-		this.init()
-			.waitForFullLoad()
+		this.iExplorer
 		return this
 	}
 	
 	getTransactions()
 	{
-		this.waitForHome()
-			.waitForFullLoad()
-		return this.csvToTransactions(this.getTransactionsAsCSV())
-	}
-	
-	init()
-	{
-		this.iexplorer := new IExplorerClass()
-		this.iexplorer.visible(true)
-			.navigate("https://goodbudget.com/home")
-		return this
+		this.iExplorer.navigate("https://goodbudget.com/home")
+		sleep 5000
+		this.waitForHome(this.iExplorer)
+			.waitForFullLoad(this.iExplorer)
+		return this.csvToTransactions(this.getTransactionsAsCSV(this.iExplorer))
 	}
 	
 	getTransactionsAsCSV()
 	{
 		notify("Exporting existing budget, please wait...")
-		this.iexplorer.getElementById("export-txns").click()
-		this.activateWindow()
-		sleep 500
-		send {f6}{tab}
-		sleep 500
-		send {down 2}{enter}
-		WinWait, Save As
-		WinActivate
-		Clipboard := this.exportFileNameWithPath
-		send ^v{enter}
-		send !y
-		sleep 500
-		FileRead, budget, % this.exportFileNameWithPath
-		FileDelete, % this.exportFileNameWithPath
+		req := ComObjCreate("Msxml2.XMLHTTP")
+		req.open("GET", "https://goodbudget.com/transactions/export", false)
+		req.send()
+		Clipboard := req.responseText
+		MsgBox % req.responseText
+		ExitApp
 		notify("")
-		return budget
-	}
-	
-	activateWindow()
-	{
-		WinActivate, Home | Goodbudget - Internet Explorer
-		return this
+		return req.responseText
 	}
 	
 	waitForHome()
 	{
 		notify("Please login to GoodBudget")
-		this.iexplorer.waitFor("Home | Goodbudget")
+		this.iExplorer.waitFor("Home | Goodbudget")
 		notify("")
 		return this
 	}
 	
 	waitForFullLoad()
 	{
-		this.iexplorer.waitForFullLoad()
+		this.iExplorer.waitForFullLoad()
 		return this
 	}
 	
@@ -80,10 +60,10 @@ Class GoodBudgetAPIClass
 	
 	setValue(id, value)
 	{
-		this.activateWindow()
-		this.iexplorer.getElementById(id).value := ""
+		this.iExplorer.activateWindow()
+		this.iExplorer.getElementById(id).value := ""
 		sleep 50
-		this.iexplorer.getElementById(id).focus()
+		this.iExplorer.getElementById(id).focus()
 		sleep 50
 		Clipboard := value
 		Send ^v
@@ -103,17 +83,17 @@ Class GoodBudgetAPIClass
 	
 	addNewTransaction(transaction)
 	{
-		sleep 3000 ;its fucking rate limited?
-		this.iexplorer.getElementsByClassName("btn addTransaction")[0].click()
+		sleep 3000 ;its  rate limited?
+		this.iExplorer.getElementsByClassName("btn addTransaction")[0].click()
 		sleep 500
 		this.setValue("expense-date", this.formatDate(transaction.transDate))
-			.setValue("expense-receiver", transaction.desc)		
-			.setValue("expense-amount", transaction.amount)		
+			.setValue("expense-receiver", transaction.desc, this.iExplorer)		
+			.setValue("expense-amount", transaction.amount, this.iExplorer)		
 		send {tab}
 		sleep 50
 		send % this.defaultEnvelope
 
-		this.iexplorer.getElementById("addTransactionSave").click()
+		this.iExplorer.getElementById("addTransactionSave").click()
 		return this
 	}
 	
@@ -169,3 +149,4 @@ Class GoodBudgetAPIClass
 }
 #Include commonFunctions.ahk
 #Include transaction.ahk
+#include iExplorer.ahk

@@ -1,47 +1,37 @@
 ﻿class CommonweathBankAPIClass
-{
-	iexplorer := false
-	debugOn := false
-	
-	__new()
+{	
+	__new(iExplorer)
 	{
-		this.init()
+		this.iExplorer := iExplorer
 		return this
 	}
 	
 	getTransactions()
 	{
-		this.waitForTransactions()
-			.waitForFullLoad()
+		this.iExplorer.navigate("https://www.netbank.com.au")
+		this.waitForTransactions(this.iExplorer)
+			.waitForFullLoad(this.iExplorer)
 		
-		return this.__getTransactions()	
-	}
-	
-	init()
-	{
-		this.iexplorer := new IExplorerClass()
-		this.iexplorer.visible(true)
-			.navigate("https://www.netbank.com.au")
-		return this
+		return this.__getTransactions(this.iExplorer)	
 	}
 	
 	waitForTransactions()
 	{
 		notify("Please navigate a transaction page")
-		this.iexplorer.waitFor("Netbank - Transactions")
+		this.iExplorer.waitFor("Netbank - Transactions")
 		notify("")
 		return this
 	}
 	
 	waitForFullLoad()
 	{
-		this.iexplorer.waitForFullLoad()
+		this.iExplorer.waitForFullLoad()
 		return this
 	}
 
 	__getTransactions()
 	{
-		table := this.iexplorer.getElementById("transactionsTableBody")
+		table := this.iExplorer.getElementById("transactionsTableBody")
 		transactions := []
 		
 		loop, % table.rows.length

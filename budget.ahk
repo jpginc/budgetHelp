@@ -1,9 +1,14 @@
-﻿deubg := true
-c := new BudgetClass(new CommonweathBankAPIClass(), new GoodBudgetAPIClass())
-Gui, Add, Text, vnotifyText, Press the update button to start!`n`n
+﻿debugOn := true
+Gui, Add, Text, vnotifyText w800 h100, Press the update button to start!`n`n
 Gui, add, button, vupdateButton gUpdate, Update
 Gui, add, button, gquit, Quit
-gui, show, w500 h500
+Gui, Add, ActiveX, w1000 h700 viExplorerGui, Shell.Explorer
+Gui, Show
+
+comVersionForCommBank :=  ComObjCreate("InternetExplorer.Application")
+comVersionForCommBank.visible := true
+
+c := new BudgetClass(new CommonweathBankAPIClass(new IExplorerClass(comVersionForCommBank)), new GoodBudgetAPIClass(new IExplorerClass(iExplorerGui)))
 return
 
 quit:
@@ -27,7 +32,6 @@ class BudgetClass
 	{
 		this.budgetAppApi := budgetAppApi
 		this.bankApi := bankApi
-		
 		return this
 	}
 	
@@ -46,7 +50,7 @@ class BudgetClass
 		startOf2017 := "20170101000000"
 		for index, transaction in transactions
 		{
-			if(transaction.date > startOf2017)
+			if(transaction.date >= startOf2017)
 			{
 				later.insert(transaction)
 			}
