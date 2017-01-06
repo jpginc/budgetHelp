@@ -86,6 +86,7 @@
 		bits := strSplit(date, " ")
 		day := bits[1]
 		month := objIndexOf(months, bits[2])
+		month := month >= 10 ? month : "0" month
 		year := bits[3]	
 		
 		return year month day "000000"
