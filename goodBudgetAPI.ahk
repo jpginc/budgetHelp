@@ -1,42 +1,48 @@
-﻿Gui, Add, ActiveX, w1000 h700 vthis.iExplorerGuiTest, Shell.Explorer
-gui show
-temp := new this.iExplorerClass(this.iExplorerGuiTest)
-test := new GoodBudgetAPIClass()
-test.getTransactions(temp)
-test.addNewTransaction(new TransactionClass(99, "a meaningful description", "12 dec 2016"), temp)
-test.addNewTransaction(new TransactionClass(99, "a meaningful description", "1 dec 2016"), temp)
+﻿temp := new IExplorerClass(ComObjCreate("InternetExplorer.Application"))
+test := new GoodBudgetAPIClass(temp)
+msgbox % arrayToString(test.getTransactions())
+test.addNewTransaction(new TransactionClass(99, "a meaningful description", "20161212000000"))
+test.addNewTransaction(new TransactionClass(99, "a meaningful description", "20160212000000"))
 ExitApp
 
 Class GoodBudgetAPIClass
 {
+	exportFileNameWithPath :=  A_Temp "\budgettmp.txt"
 	defaultEnvelope := "To Assign"
 	
 	__new(iExplorer)
 	{
-		this.iExplorer
+		this.iExplorer := iExplorer
 		return this
 	}
 	
 	getTransactions()
 	{
 		this.iExplorer.navigate("https://goodbudget.com/home")
-		sleep 5000
-		this.waitForHome(this.iExplorer)
-			.waitForFullLoad(this.iExplorer)
-		return this.csvToTransactions(this.getTransactionsAsCSV(this.iExplorer))
+		this.waitForHome()
+			.waitForFullLoad()
+		return this.csvToTransactions(this.getTransactionsAsCSV())
 	}
 	
 	getTransactionsAsCSV()
 	{
 		notify("Exporting existing budget, please wait...")
-		req := ComObjCreate("Msxml2.XMLHTTP")
-		req.open("GET", "https://goodbudget.com/transactions/export", false)
-		req.send()
-		Clipboard := req.responseText
-		MsgBox % req.responseText
-		ExitApp
+		this.iexplorer.getElementById("export-txns").click()
+		this.activateWindow()
+		sleep 500
+		send {f6}{tab}
+		sleep 500
+		send {down 2}{enter}
+		WinWait, Save As
+		WinActivate
+		Clipboard := this.exportFileNameWithPath
+		send ^v{enter}
+		send !y
+		sleep 500
+		FileRead, budget, % this.exportFileNameWithPath
+		FileDelete, % this.exportFileNameWithPath
 		notify("")
-		return req.responseText
+		return budget
 	}
 	
 	waitForHome()
@@ -75,20 +81,30 @@ Class GoodBudgetAPIClass
 	 * attempts to format the date, if it fails then the original value is returned
 	 * hopefully the date is already formatted....
 	 */
-	formatDate(date)
+	formatDateForGoodBudget(date)
 	{
 		formatTime, fixedDate, % date, MM/dd/yyyy
 		return fixedDate ? fixedDate : date
 	}
 	
+	formatDateForTransaction(date)
+	{
+		months := ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+		bits := strSplit(date, "/")
+		month := bits[1]
+		day := bits[2]
+		year := bits[3]	
+		
+		return year month day "000000"
+	}
 	addNewTransaction(transaction)
 	{
 		sleep 3000 ;its  rate limited?
 		this.iExplorer.getElementsByClassName("btn addTransaction")[0].click()
 		sleep 500
-		this.setValue("expense-date", this.formatDate(transaction.transDate))
-			.setValue("expense-receiver", transaction.desc, this.iExplorer)		
-			.setValue("expense-amount", transaction.amount, this.iExplorer)		
+		this.setValue("expense-date", this.formatDateForGoodBudget(transaction.transDate))
+			.setValue("expense-receiver", transaction.desc)		
+			.setValue("expense-amount", transaction.amount)		
 		send {tab}
 		sleep 50
 		send % this.defaultEnvelope
@@ -115,7 +131,7 @@ Class GoodBudgetAPIClass
 			values := this.csvSplit(A_loopfield)
 			if(values[transDateColumn] && values[transDescColumn] && values[transAmountColumn])
 			{
-				transactions.Insert(new TransactionClass(values[transAmountColumn], values[transDescColumn], values[transDateColumn]))
+				transactions.Insert(new TransactionClass(values[transAmountColumn], values[transDescColumn], this.formatDateForTransaction(values[transDateColumn])))
 			}
 		}
 		debug(ArrayToString(transactions))

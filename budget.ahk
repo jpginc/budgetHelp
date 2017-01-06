@@ -2,13 +2,12 @@
 Gui, Add, Text, vnotifyText w800 h100, Press the update button to start!`n`n
 Gui, add, button, vupdateButton gUpdate, Update
 Gui, add, button, gquit, Quit
-Gui, Add, ActiveX, w1000 h700 viExplorerGui, Shell.Explorer
 Gui, Show
 
-comVersionForCommBank :=  ComObjCreate("InternetExplorer.Application")
-comVersionForCommBank.visible := true
+ie :=  new IExplorerClass(ComObjCreate("InternetExplorer.Application"))
 
-c := new BudgetClass(new CommonweathBankAPIClass(new IExplorerClass(comVersionForCommBank)), new GoodBudgetAPIClass(new IExplorerClass(iExplorerGui)))
+
+c := new BudgetClass(new CommonweathBankAPIClass(ie), new GoodBudgetAPIClass(ie))
 return
 
 quit:
@@ -50,7 +49,7 @@ class BudgetClass
 		startOf2017 := "20170101000000"
 		for index, transaction in transactions
 		{
-			if(transaction.date >= startOf2017)
+			if(transaction.transDate >= startOf2017)
 			{
 				later.insert(transaction)
 			}

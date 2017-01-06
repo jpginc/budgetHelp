@@ -162,5 +162,13 @@ getNextValue(ByRef string, start)
     return false
 }
 
+objIndexOf(obj, item, case_sensitive:=false)
+{
+	for i, val in obj {
+		if (case_sensitive ? (val == item) : (val = item))
+			return i
+	}
+    return false
+}
 
 #x::ExitApp

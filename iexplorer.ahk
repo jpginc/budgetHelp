@@ -3,7 +3,7 @@
 	__new(iExplorer)
 	{
 		this.comObj :=  iExplorer
-		iExplorer.silent :=1
+		iExplorer.visible := true
 		return this
 	}
 	
@@ -54,6 +54,7 @@
 	{
 		return this.comObj.document.getElementById(id)
 	}
+	
 	getElementsByClassName(name)
 	{
 		return this.comObj.document.getElementsByClassName(name)

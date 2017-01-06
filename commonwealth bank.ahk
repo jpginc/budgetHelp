@@ -74,10 +74,21 @@
 		{
 			if(! InStr(transDetail, "PENDING -"))
 			{
-				return new TransactionClass(amount, this.trimDetails(transDetail), transDate)
+				return new TransactionClass(amount, this.trimDetails(transDetail), this.formatDate(transDate))
 			}
 		}
 		return false
+	}
+	
+	formatDate(date)
+	{
+		months := ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+		bits := strSplit(date, " ")
+		day := bits[1]
+		month := objIndexOf(months, bits[2])
+		year := bits[3]	
+		
+		return year month day "000000"
 	}
 	
 	trimDetails(details)
